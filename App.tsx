@@ -8,55 +8,40 @@
  * @format
  */
 
-import React from 'react';
+import React, {useState} from 'react';
 import {
   SafeAreaView,
-  ScrollView,
-  StatusBar,
   StyleSheet,
   Text,
   useColorScheme,
-  View,
+  Button
 } from 'react-native';
 
 import {
   Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
 } from 'react-native/Libraries/NewAppScreen';
 
-const Section: React.FC<{
-  title: string;
-}> = ({children, title}) => {
-  const isDarkMode = useColorScheme() === 'dark';
-  return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
-  );
-};
+const bip39 = require('@medardm/react-native-bip39');
 
 const App = () => {
   const isDarkMode = useColorScheme() === 'dark';
+  const [strMnemonic, setStrMnemonic] = useState('');
+  const [strPrivateKey, setStrPrivateKey] = useState('');
+  const [strPublicKey, setStrPublicKey] = useState('');
+
+  const consoleData = async () => {
+    // ecc.randomKey().then(privateKey => {
+    //   console.log('Private Key:\t', privateKey) // wif
+    //   console.log('Public Key:\t', ecc.privateToPublic('5JjkrT2ptuTY3F8GQghiP7d6idahFjnLV1gLm6vq2fbc4VK8Hoo')) // EOSkey...
+    // })
+    let mnemonic = await bip39.generateMnemonic(128);
+    let seed = bip39.mnemonicToSeedSync(mnemonic).toString('hex');
+    // let privateKey = await ecc.seedPrivate(seed);
+    // let publicKey = ecc.privateToPublic(privateKey);
+    setStrMnemonic(mnemonic);
+    // setStrPrivateKey(privateKey);
+    // setStrPublicKey(publicKey)
+  }
 
   const backgroundStyle = {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
@@ -64,31 +49,13 @@ const App = () => {
 
   return (
     <SafeAreaView style={backgroundStyle}>
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
-        <Header />
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-          }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
-        </View>
-      </ScrollView>
+      <Button onPress={consoleData} title="Generate Keys"/>
+      <Text>Seed Phrases</Text> 
+      <Text>{strMnemonic}</Text>
+      <Text>Private Key</Text> 
+      <Text>{strPrivateKey}</Text> 
+      <Text>Public Key</Text> 
+      <Text>{strPublicKey}</Text> 
     </SafeAreaView>
   );
 };
