@@ -22,6 +22,7 @@ import {
 } from 'react-native/Libraries/NewAppScreen';
 
 const bip39 = require('@medardm/react-native-bip39');
+import ecc from 'eosjs-ecc-rn';
 
 const App = () => {
   const isDarkMode = useColorScheme() === 'dark';
@@ -30,17 +31,13 @@ const App = () => {
   const [strPublicKey, setStrPublicKey] = useState('');
 
   const consoleData = async () => {
-    // ecc.randomKey().then(privateKey => {
-    //   console.log('Private Key:\t', privateKey) // wif
-    //   console.log('Public Key:\t', ecc.privateToPublic('5JjkrT2ptuTY3F8GQghiP7d6idahFjnLV1gLm6vq2fbc4VK8Hoo')) // EOSkey...
-    // })
     let mnemonic = await bip39.generateMnemonic(128);
     let seed = bip39.mnemonicToSeedSync(mnemonic).toString('hex');
-    // let privateKey = await ecc.seedPrivate(seed);
-    // let publicKey = ecc.privateToPublic(privateKey);
+    let privateKey = await ecc.seedPrivate(seed);
+    let publicKey = ecc.privateToPublic(privateKey);
     setStrMnemonic(mnemonic);
-    // setStrPrivateKey(privateKey);
-    // setStrPublicKey(publicKey)
+    setStrPrivateKey(privateKey);
+    setStrPublicKey(publicKey)
   }
 
   const backgroundStyle = {

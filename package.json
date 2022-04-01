@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@medardm/react-native-bip39": "^3.0.2",
+    "eosjs-ecc-rn": "^4.0.6-rn",
     "events": "^3.3.0",
     "react": "17.0.2",
     "react-native": "0.68.0",
