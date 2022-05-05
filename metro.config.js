@@ -5,12 +5,18 @@
  * @format
  */
 
+const exclusionList = require('metro-config/src/defaults/exclusionList');
+
 module.exports = {
   resolver: {
     extraNodeModules: {
         stream: require.resolve('readable-stream'),
-        // crypto: require.resolve('react-native-crypto-js'),
-    }
+    },
+    blacklistRE: exclusionList([
+      /\/nodejs-assets\/.*/,
+      /\/android\/.*/,
+      /\/ios\/.*/
+    ])
   },
   transformer: {
     getTransformOptions: async () => ({

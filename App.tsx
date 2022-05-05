@@ -8,7 +8,7 @@
  * @format
  */
 
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   SafeAreaView,
   StyleSheet,
@@ -23,12 +23,23 @@ import {
 
 const bip39 = require('@medardm/react-native-bip39');
 import ecc from 'eosjs-ecc-rn';
+import nodejs from 'nodejs-mobile-react-native';
 
 const App = () => {
   const isDarkMode = useColorScheme() === 'dark';
   const [strMnemonic, setStrMnemonic] = useState('');
   const [strPrivateKey, setStrPrivateKey] = useState('');
   const [strPublicKey, setStrPublicKey] = useState('');
+
+  useEffect(() => {
+    nodejs.start('main.js');
+    nodejs.channel.addListener(
+      'message',
+      (msg) => {
+        console.log(msg);
+      },
+    );
+  }, []);
 
   const consoleData = async () => {
     let mnemonic = await bip39.generateMnemonic(128);
@@ -47,6 +58,9 @@ const App = () => {
   return (
     <SafeAreaView style={backgroundStyle}>
       <Button onPress={consoleData} title="Generate Keys"/>
+      <Button title="Message Node"
+    onPress={() => nodejs.channel.send('A message123!')}
+    />
       <Text>Seed Phrases</Text> 
       <Text>{strMnemonic}</Text>
       <Text>Private Key</Text> 
