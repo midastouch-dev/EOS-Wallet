@@ -8,13 +8,14 @@
  * @format
  */
 
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {
   SafeAreaView,
   StyleSheet,
   Text,
   useColorScheme,
-  Button
+  Button,
+  TextInput
 } from 'react-native';
 
 import {
@@ -24,12 +25,15 @@ import {
 const bip39 = require('@medardm/react-native-bip39');
 import ecc from 'eosjs-ecc-rn';
 import nodejs from 'nodejs-mobile-react-native';
+import {EOS_SERVER_URL, EOS_PRIVATE_KEY} from "@env"
 
 const App = () => {
   const isDarkMode = useColorScheme() === 'dark';
   const [strMnemonic, setStrMnemonic] = useState('');
   const [strPrivateKey, setStrPrivateKey] = useState('');
   const [strPublicKey, setStrPublicKey] = useState('');
+  const [strName, setStrName] = useState('');
+  let checkCreateAccount = useRef(0);
 
   useEffect(() => {
     nodejs.start('main.js');
@@ -37,18 +41,40 @@ const App = () => {
       'message',
       (msg) => {
         console.log(msg);
+        let jsonData = JSON.parse(msg);
+        if(jsonData.type == 'get_account') {
+          if(checkCreateAccount.current == 1) {
+            if(jsonData.code == 400) {
+              checkCreateAccount.current = 0;
+              console.log(EOS_PRIVATE_KEY);
+              nodejs.channel.send('create_account', EOS_SERVER_URL, EOS_PRIVATE_KEY, strName, strPublicKey)
+            } else {
+              console.log("This account was already existed.");
+            }
+          } else {
+            console.log(jsonData.message);
+          }
+        } else if(jsonData.type == 'create_account') {
+          console.log(jsonData.message);
+        }
       },
     );
   }, []);
 
-  const consoleData = async () => {
+  const generateKeys = async () => {
     let mnemonic = await bip39.generateMnemonic(128);
     let seed = bip39.mnemonicToSeedSync(mnemonic).toString('hex');
     let privateKey = await ecc.seedPrivate(seed);
     let publicKey = ecc.privateToPublic(privateKey);
     setStrMnemonic(mnemonic);
     setStrPrivateKey(privateKey);
-    setStrPublicKey(publicKey)
+    setStrPublicKey(publicKey);
+    console.log(publicKey);
+  }
+
+  const GetAccount = (createAccount:any) => {
+    checkCreateAccount.current = createAccount;
+    nodejs.channel.send('get_account', EOS_SERVER_URL, EOS_PRIVATE_KEY, strName, strPublicKey)
   }
 
   const backgroundStyle = {
@@ -57,16 +83,16 @@ const App = () => {
 
   return (
     <SafeAreaView style={backgroundStyle}>
-      <Button onPress={consoleData} title="Generate Keys"/>
-      <Button title="Message Node"
-    onPress={() => nodejs.channel.send('A message123!')}
-    />
+      <Button onPress={generateKeys} title="Generate Keys"/>
       <Text>Seed Phrases</Text> 
       <Text>{strMnemonic}</Text>
       <Text>Private Key</Text> 
       <Text>{strPrivateKey}</Text> 
       <Text>Public Key</Text> 
-      <Text>{strPublicKey}</Text> 
+      <Text>{strPublicKey}</Text>
+      <TextInput value={strName} onChangeText={text => setStrName(text)} placeholder="User Name"/>
+      <Button title="Create Account" onPress={() => GetAccount(1)} />
+      <Button title="Get Account" onPress={() => GetAccount(0)} />
     </SafeAreaView>
   );
 };

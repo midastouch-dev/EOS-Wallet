@@ -17,6 +17,7 @@
     "nodejs-mobile-react-native": "^0.8.0",
     "react": "17.0.2",
     "react-native": "0.68.0",
+    "react-native-dotenv": "^3.3.1",
     "react-native-randombytes": "^3.6.1",
     "readable-stream": "^3.6.0",
     "rn-nodeify": "^10.3.0"

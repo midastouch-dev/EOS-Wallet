@@ -10,6 +10,10 @@
   "author": "janeasystems",
   "license": "",
   "dependencies": {
-    "node-fetch": "^2.6.7"
+    "dotenv": "^16.0.0",
+    "eosjs": "^22.1.0",
+    "eosjs-ecc": "^4.0.7",
+    "node-fetch": "^2.6.7",
+    "text-encoding": "^0.7.0"
   }
 }
