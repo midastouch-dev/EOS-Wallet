@@ -37,29 +37,39 @@ const App = () => {
 
   useEffect(() => {
     nodejs.start('main.js');
-    nodejs.channel.addListener(
-      'message',
-      (msg) => {
-        console.log(msg);
-        let jsonData = JSON.parse(msg);
-        if(jsonData.type == 'get_account') {
-          if(checkCreateAccount.current == 1) {
-            if(jsonData.code == 400) {
-              checkCreateAccount.current = 0;
-              console.log(EOS_PRIVATE_KEY);
-              nodejs.channel.send('create_account', EOS_SERVER_URL, EOS_PRIVATE_KEY, strName, strPublicKey)
+  }, []);
+
+  const setListner = () => {
+    let susbcription = null
+    try {
+      if(susbcription != null) {
+        susbcription.remove();
+      }
+      susbcription= nodejs.channel.addListener(
+        'message',
+        (msg) => {
+          console.log(msg);
+          let jsonData = JSON.parse(msg);
+          if(jsonData.type == 'get_account') {
+            if(checkCreateAccount.current == 1) {
+              if(jsonData.code == 400) {
+                checkCreateAccount.current = 0;
+                nodejs.channel.send('create_account', EOS_SERVER_URL, EOS_PRIVATE_KEY, strName, strPublicKey)
+              } else {
+                console.log("This account was already existed.");
+              }
             } else {
-              console.log("This account was already existed.");
+              console.log(jsonData.message);
             }
-          } else {
+          } else if(jsonData.type == 'create_account') {
             console.log(jsonData.message);
           }
-        } else if(jsonData.type == 'create_account') {
-          console.log(jsonData.message);
-        }
-      },
-    );
-  }, []);
+        },
+      );
+    } catch(e) {
+      console.log(e);
+    }
+  }
 
   const generateKeys = async () => {
     let mnemonic = await bip39.generateMnemonic(128);
@@ -73,6 +83,7 @@ const App = () => {
   }
 
   const GetAccount = (createAccount:any) => {
+    setListner();
     checkCreateAccount.current = createAccount;
     nodejs.channel.send('get_account', EOS_SERVER_URL, EOS_PRIVATE_KEY, strName, strPublicKey)
   }

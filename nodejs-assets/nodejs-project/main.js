@@ -4,9 +4,10 @@
 var rn_bridge = require('rn-bridge');
 
 const { Api, JsonRpc} = require('eosjs');
-const { JsSignatureProvider } = require('eosjs/dist/eosjs-jssig');  // development only
-const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
+const { JsSignatureProvider } = require('eosjs/dist/eosjs-jssig'); // development only
+const fetch = require('node-fetch'); // node only; not needed in browsers
 const { TextDecoder, TextEncoder } = require('util');
+
 
 // Echo every message received from react-native.
 rn_bridge.channel.on('message', (type, url, private_key, name, key) => {
@@ -20,8 +21,18 @@ rn_bridge.channel.on('message', (type, url, private_key, name, key) => {
   }
 });
 
+// Return Values
+const returnResult = (type, code, message) => {
+  const return_value = {
+    type, code, message
+  }
+  console.log(JSON.stringify(return_value));
+  rn_bridge.channel.send(JSON.stringify(return_value));
+}
+
 // Create an account
 const createAccount = async (url, private_key, name, myKey) => {
+  returnResult('create_account', 204, '11111');
   try {
     const privateKeys = [private_key];
     const signatureProvider = new JsSignatureProvider(privateKeys);
@@ -30,11 +41,7 @@ const createAccount = async (url, private_key, name, myKey) => {
     
     const rpc = new JsonRpc(url, { fetch });
     const api = new Api({ rpc, signatureProvider, textDecoder: new TextDecoder(), textEncoder: new TextEncoder() });
-
-    let x = await api.signatureProvider.getAvailableKeys(); 
     
-    returnResult('create_account', 202, JSON.stringify(x));
-
     await api.transact({
       actions: [{
         account: 'eosio',
@@ -44,7 +51,7 @@ const createAccount = async (url, private_key, name, myKey) => {
           permission: 'active',
         }],
         data: {
-          creator: 'useraaaaaaaa',
+          creator: 'eosio',
           name: name,
           owner: {
             threshold: 1,
@@ -61,47 +68,23 @@ const createAccount = async (url, private_key, name, myKey) => {
               key: myKey,
               weight: 1
             }],
+          
             accounts: [],
             waits: []
           },
         },
-      },
-      {
-        account: 'eosio',
-        name: 'buyrambytes',
-        authorization: [{
-          actor: name,
-          permission: 'active',
-        }],
-        data: {
-          payer: name,
-          receiver: 'mynewaccount',
-          bytes: 8192,
-        },
-      },
-      {
-        account: 'eosio',
-        name: 'delegatebw',
-        authorization: [{
-          actor: name,
-          permission: 'active',
-        }],
-        data: {
-          from: name,
-          receiver: 'eosio',
-          stake_net_quantity: '1.0000 SYS',
-          stake_cpu_quantity: '1.0000 SYS',
-          transfer: false,
-        }
       }]
-    }, {
-      blocksBehind: 3,
-      expireSeconds: 30,
-    });
+      }, {
+        blocksBehind: 3,
+        expireSeconds: 30,
+      });
+
+    console.log('success')
 
     returnResult('create_account', 200, 'You successfully created new account.');
   } catch(err) {
-    returnResult('create_account', 400, 'Failed to create an account.');
+    console.log(err);
+    returnResult('create_account', 400, err);
   }
 }
 
@@ -115,12 +98,4 @@ const getAccount = async (url, name) => {
 } catch(e) {
     returnResult('get_account', 400, 'Failed to get the account info.');
   }
-}
-
-// Return Values
-const returnResult = (type, code, message) => {
-  const return_value = {
-    type, code, message
-  }
-  rn_bridge.channel.send(JSON.stringify(return_value));
 }
